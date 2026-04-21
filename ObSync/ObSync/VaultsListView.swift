@@ -89,8 +89,8 @@ struct VaultsListView: View {
                 .font(.firaCode(.headline))
                 .foregroundStyle(.secondary)
             Button("Add Vault") { showAddVault = true }
-                .buttonStyle(.borderedProminent)
-                .tint(.obsidianPurple)
+                .font(.firaCode(.headline))
+                .glassButton()
         }
     }
 
@@ -170,9 +170,7 @@ struct VaultCardView: View {
                 }
                 .font(.firaCode(.title3))
             }
-            .buttonStyle(.glass)
-            .tint(.obsidianPurple)
-            .glassEffect(.regular.tint(.obsidianPurple.opacity(0.3)))
+            .glassButton(tint: .obsidianPurple.opacity(0.3))
             .disabled(isSyncing)
         }
         .padding(.vertical, 4)

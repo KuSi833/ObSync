@@ -32,8 +32,7 @@ struct LoginView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 4)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(.obsidianPurple)
+            .glassButton()
             .disabled(isLoading)
 
             if let error = errorMessage {

@@ -55,7 +55,7 @@ struct GitIdentityFormView: View {
                             showInfo = true
                         } label: {
                             Image(systemName: "info.circle")
-                                .font(.footnote)
+                                .font(.firaCode(.footnote))
                                 .foregroundStyle(.obsidianPurple)
                         }
                     }
@@ -71,9 +71,8 @@ struct GitIdentityFormView: View {
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 10)
                             }
-                            .buttonStyle(.glassProminent)
-                            .tint(.gray)
-                            .glassEffect(.regular.tint(.gray))
+                            .foregroundStyle(.white.opacity(0.8))
+                            .glassButton(tint: .gray, glassTint: .gray.opacity(0.65))
                         }
 
                         Button {
@@ -86,9 +85,7 @@ struct GitIdentityFormView: View {
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 10)
                         }
-                        .buttonStyle(.glassProminent)
-                        .tint(.obsidianPurple)
-                        .glassEffect(.regular.tint(.obsidianPurple))
+                        .glassButton()
                         .disabled(name.isEmpty || email.isEmpty)
                     }
                     .listRowBackground(Color.clear)

@@ -10,5 +10,7 @@
 	<array>
 		<string>FiraCode-VF.ttf</string>
 	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

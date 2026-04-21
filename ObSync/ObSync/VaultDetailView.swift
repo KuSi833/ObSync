@@ -99,7 +99,7 @@ struct VaultDetailView: View {
                         showSyncModeInfo = true
                     } label: {
                         Image(systemName: "info.circle")
-                            .font(.footnote)
+                            .font(.firaCode(.footnote))
                             .foregroundStyle(.obsidianPurple)
                     }
                 }
@@ -123,6 +123,7 @@ struct VaultDetailView: View {
                     ProgressView(value: progress) {
                         Text("Cloning... \(Int(progress * 100))%")
                     }
+                    .tint(.obsidianPurple)
                 case .error(let message):
                     Text(message)
                         .foregroundStyle(.red)
@@ -180,7 +181,7 @@ struct VaultDetailView: View {
                             openOnGitHub(path: "\(vault.repoFullName)/commits/\(vault.branch)")
                         } label: {
                             Image(systemName: "arrow.up.right")
-                                .font(.caption)
+                                .font(.firaCode(.caption))
                                 .foregroundStyle(.obsidianPurple)
                         }
                     }
@@ -201,18 +202,14 @@ struct VaultDetailView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
                     }
-                    .buttonStyle(.glass)
-                    .tint(.red)
-                    .glassEffect(.regular.tint(.red.opacity(0.3)))
+                    .glassButton(tint: .red, glassTint: .red.opacity(0.3))
 
                     Button(action: { store.sync(vault: vault, token: token) }) {
                         Label("Retry", systemImage: "arrow.triangle.2.circlepath")
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
                     }
-                    .buttonStyle(.glass)
-                    .tint(.obsidianPurple)
-                    .glassEffect(.regular.tint(.obsidianPurple.opacity(0.3)))
+                    .glassButton(tint: .obsidianPurple.opacity(0.3))
                 } else {
                     Button(action: { store.sync(vault: vault, token: token) }) {
                         HStack {
@@ -228,9 +225,7 @@ struct VaultDetailView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                     }
-                    .buttonStyle(.glass)
-                    .tint(.obsidianPurple)
-                    .glassEffect(.regular.tint(.obsidianPurple.opacity(0.3)))
+                    .glassButton(tint: .obsidianPurple.opacity(0.3))
                     .disabled(isSyncing)
                 }
             }

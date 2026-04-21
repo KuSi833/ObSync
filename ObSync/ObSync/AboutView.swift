@@ -36,7 +36,7 @@ struct AboutView: View {
                             Label("Support ObSync", systemImage: "heart")
                             Spacer()
                             Image(systemName: "arrow.up.right")
-                                .font(.caption)
+                                .font(.firaCode(.caption))
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -49,7 +49,7 @@ struct AboutView: View {
                             Label("Privacy Policy", systemImage: "hand.raised")
                             Spacer()
                             Image(systemName: "arrow.up.right")
-                                .font(.caption)
+                                .font(.firaCode(.caption))
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -62,7 +62,7 @@ struct AboutView: View {
                             Label("Open Source Licenses", systemImage: "doc.text")
                             Spacer()
                             Image(systemName: "chevron.right")
-                                .font(.caption)
+                                .font(.firaCode(.caption))
                                 .foregroundStyle(.secondary)
                         }
                     }

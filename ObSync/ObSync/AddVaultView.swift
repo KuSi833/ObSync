@@ -136,8 +136,7 @@ struct AddVaultView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 4)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(.obsidianPurple)
+            .glassButton()
 
             Button("Back") { selectedRepo = nil }
                 .foregroundStyle(.secondary)
@@ -182,8 +181,7 @@ struct AddVaultView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 4)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(.obsidianPurple)
+            .glassButton()
 
             Button("Back") { selectedFolder = nil; folderBookmark = nil }
                 .foregroundStyle(.secondary)

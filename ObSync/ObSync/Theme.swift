@@ -94,6 +94,58 @@ struct AnimatedDotsText: View {
     }
 }
 
+// MARK: - Glass Button Compatibility
+
+struct GlassButtonModifier: ViewModifier {
+    var buttonTint: Color
+    var glassTint: Color
+
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content
+                .foregroundStyle(Color("ButtonText"))
+                .buttonStyle(.glass)
+                .tint(buttonTint)
+                .glassEffect(.regular.tint(glassTint))
+        } else {
+            content
+                .foregroundStyle(Color("ButtonText"))
+                .buttonStyle(.borderedProminent)
+                .tint(buttonTint)
+        }
+    }
+}
+
+struct GlassProminentButtonModifier: ViewModifier {
+    var buttonTint: Color
+    var glassTint: Color
+
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content
+                .foregroundStyle(Color("ButtonText"))
+                .buttonStyle(.glassProminent)
+                .tint(buttonTint)
+                .glassEffect(.regular.tint(glassTint))
+        } else {
+            content
+                .foregroundStyle(Color("ButtonText"))
+                .buttonStyle(.borderedProminent)
+                .tint(buttonTint)
+        }
+    }
+}
+
+extension View {
+func glassButton(tint: Color = .obsidianPurple, glassTint: Color = .obsidianPurple.opacity(0.3)) -> some View {
+        modifier(GlassButtonModifier(buttonTint: tint, glassTint: glassTint))
+    }
+
+    func glassProminentButton(tint: Color = .obsidianPurple, glassTint: Color = .obsidianPurple) -> some View {
+        modifier(GlassProminentButtonModifier(buttonTint: tint, glassTint: glassTint))
+    }
+}
+
 private extension Font.TextStyle {
     var size: CGFloat {
         switch self {
