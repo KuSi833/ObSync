@@ -9,6 +9,7 @@ struct VaultsListView: View {
     @State private var vaultToDelete: Vault?
     @State private var showIdentityEditor = false
     @State private var showAbout = false
+    @State private var showGuide = false
     @State private var username: String?
 
     var body: some View {
@@ -31,6 +32,9 @@ struct VaultsListView: View {
                     Menu {
                         Label(username ?? "Account", systemImage: "person.crop.circle")
                             .disabled(true)
+                        Button("Guide", systemImage: "book") {
+                            showGuide = true
+                        }
                         Button("Git Identity", systemImage: "person.text.rectangle") {
                             showIdentityEditor = true
                         }
@@ -57,6 +61,9 @@ struct VaultsListView: View {
             }
             .sheet(isPresented: $showAbout) {
                 AboutView()
+            }
+            .sheet(isPresented: $showGuide) {
+                GuideView()
             }
             .alert("Remove Vault?", isPresented: .init(
                 get: { vaultToDelete != nil },
@@ -91,6 +98,15 @@ struct VaultsListView: View {
             Button("Add Vault") { showAddVault = true }
                 .font(.firaCode(.headline))
                 .glassButton()
+            Button {
+                showGuide = true
+            } label: {
+                Label("Guide", systemImage: "book")
+                    .font(.firaCode(.subheadline))
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+            .padding(.top, 4)
         }
     }
 
