@@ -6,14 +6,17 @@ struct AddVaultView: View {
 
     @Environment(\.dismiss) private var dismiss
 
-    @State private var repos: [GitHubAuth.Repo] = []
-    @State private var selectedRepo: GitHubAuth.Repo?
-    @State private var selectedFolder: URL?
-    @State private var folderBookmark: Data?
-    @State private var isLoadingRepos = true
+    @State var repos: [GitHubAuth.Repo] = []
+    @State var selectedRepo: GitHubAuth.Repo?
+    @State var selectedFolder: URL?
+    @State var folderBookmark: Data?
+    @State var isLoadingRepos = true
     @State private var showFolderPicker = false
     @State private var searchText = ""
-    @State private var showNonEmptyConfirm = false
+    @State var showNonEmptyConfirm = false
+    @State var selectedBranch: String?
+    @State var branches: [GitHubAuth.Branch] = []
+    @State private var showBranchPicker = false
 
     private var filteredRepos: [GitHubAuth.Repo] {
         if searchText.isEmpty { return repos }
@@ -43,6 +46,15 @@ struct AddVaultView: View {
                     repos = try await GitHubAuth.fetchRepos(token: token)
                 } catch {}
                 isLoadingRepos = false
+            }
+            .task(id: selectedRepo?.id) {
+                guard let repo = selectedRepo else {
+                    branches = []
+                    selectedBranch = nil
+                    return
+                }
+                selectedBranch = repo.default_branch
+                branches = (try? await GitHubAuth.fetchBranches(repo: repo.full_name, token: token)) ?? []
             }
             .sheet(isPresented: $showFolderPicker) {
                 FolderPicker { url in
@@ -149,52 +161,188 @@ struct AddVaultView: View {
     // MARK: - Step 3: Confirm
 
     private var confirmStep: some View {
-        VStack(spacing: 24) {
-            Spacer()
-
-            VStack(spacing: 16) {
-                VStack(spacing: 4) {
-                    Text("Repository")
-                        .font(.firaCode(.caption))
-                        .foregroundStyle(.secondary)
+        List {
+            Section("Repository") {
+                HStack {
                     Text(selectedRepo?.full_name ?? "")
                         .font(.firaCode(.body))
-                        .bold()
+                    Spacer()
+                    Image("GitHubMark")
+                        .resizable()
+                        .renderingMode(.template)
+                        .scaledToFit()
+                        .frame(width: 18, height: 18)
+                        .foregroundStyle(.secondary)
                 }
 
-                VStack(spacing: 4) {
-                    Text("Folder")
-                        .font(.firaCode(.caption))
-                        .foregroundStyle(.secondary)
+                Button {
+                    showBranchPicker = true
+                } label: {
+                    HStack {
+                        Text(selectedBranch ?? selectedRepo?.default_branch ?? "")
+                            .font(.firaCode(.body))
+                        Spacer()
+                        Image("GitBranch")
+                            .resizable()
+                            .renderingMode(.template)
+                            .scaledToFit()
+                            .frame(width: 16, height: 16)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .tint(.primary)
+            }
+
+            Section("Folder") {
+                HStack {
                     Text(selectedFolder?.lastPathComponent ?? "")
                         .font(.firaCode(.body))
-                        .bold()
+                    Spacer()
+                    Image(systemName: "folder")
+                        .foregroundStyle(.secondary)
                 }
             }
-            .padding()
-            .frame(maxWidth: .infinity)
-            .background(.ultraThinMaterial)
-
-            Button(action: createVault) {
-                Label("Add Vault", systemImage: "externaldrive.badge.icloud")
-                    .font(.firaCode(.headline))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 4)
-            }
-            .glassButton()
-
-            Button("Back") { selectedFolder = nil; folderBookmark = nil }
-                .foregroundStyle(.secondary)
-
-            Spacer()
         }
-        .padding(.horizontal, 32)
+        .sheet(isPresented: $showBranchPicker) {
+            NavigationStack {
+                List(branches) { branch in
+                    Button {
+                        selectedBranch = branch.name
+                        showBranchPicker = false
+                    } label: {
+                        HStack {
+                            Text(branch.name)
+                                .font(.firaCode(.body))
+                            Spacer()
+                            if branch.name == selectedBranch {
+                                Image(systemName: "checkmark")
+                                    .foregroundStyle(.obsidianPurple)
+                            }
+                        }
+                    }
+                    .tint(.primary)
+                }
+                .navigationTitle("Branch")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") { showBranchPicker = false }
+                    }
+                }
+            }
+            .presentationDetents([.medium])
+        }
+        .safeAreaInset(edge: .bottom) {
+            VStack(spacing: 12) {
+                Button(action: createVault) {
+                    Label("Add Vault", systemImage: "externaldrive.badge.icloud")
+                        .font(.firaCode(.headline))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                }
+                .glassButton(tint: .obsidianPurple.opacity(0.3))
+
+                Button("Back") { selectedFolder = nil; folderBookmark = nil }
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 8)
+        }
     }
 
     private func createVault() {
         guard let repo = selectedRepo, let bookmark = folderBookmark else { return }
-        let vault = Vault(repoFullName: repo.full_name, branch: repo.default_branch, folderBookmark: bookmark, folderName: selectedFolder?.lastPathComponent)
+        let branch = selectedBranch ?? repo.default_branch
+        let vault = Vault(repoFullName: repo.full_name, branch: branch, folderBookmark: bookmark, folderName: selectedFolder?.lastPathComponent)
         onCreate(vault)
         dismiss()
     }
+}
+
+// MARK: - Previews
+
+private let sampleRepos: [GitHubAuth.Repo] = [
+    GitHubAuth.Repo(id: 1, full_name: "kmilicic/obsidian-vault", private: true, default_branch: "main"),
+    GitHubAuth.Repo(id: 2, full_name: "kmilicic/second-brain", private: false, default_branch: "main"),
+    GitHubAuth.Repo(id: 3, full_name: "kmilicic/work-notes", private: true, default_branch: "master"),
+    GitHubAuth.Repo(id: 4, full_name: "kmilicic/journal", private: true, default_branch: "main"),
+    GitHubAuth.Repo(id: 5, full_name: "kmilicic/recipes", private: false, default_branch: "main"),
+]
+
+#Preview("1. Loading Repos") {
+    AddVaultView(
+        token: "fake",
+        onCreate: { _ in },
+        isLoadingRepos: true
+    )
+}
+
+#Preview("2. Repo Picker") {
+    AddVaultView(
+        token: "fake",
+        onCreate: { _ in },
+        repos: sampleRepos,
+        isLoadingRepos: false
+    )
+}
+
+#Preview("3. Folder Picker") {
+    AddVaultView(
+        token: "fake",
+        onCreate: { _ in },
+        repos: sampleRepos,
+        selectedRepo: sampleRepos[0],
+        isLoadingRepos: false
+    )
+}
+
+private let sampleBranches: [GitHubAuth.Branch] = [
+    GitHubAuth.Branch(name: "main"),
+    GitHubAuth.Branch(name: "develop"),
+    GitHubAuth.Branch(name: "feature/refactor-sync"),
+    GitHubAuth.Branch(name: "release/v1.1"),
+]
+
+#Preview("4. Confirm — Light") {
+    AddVaultView(
+        token: "fake",
+        onCreate: { _ in },
+        repos: sampleRepos,
+        selectedRepo: sampleRepos[0],
+        selectedFolder: URL(fileURLWithPath: "/private/var/mobile/Containers/Shared/AppGroup/Obsidian/MyVault"),
+        folderBookmark: Data(),
+        isLoadingRepos: false,
+        selectedBranch: "main",
+        branches: sampleBranches
+    )
+}
+
+#Preview("4. Confirm — Dark") {
+    AddVaultView(
+        token: "fake",
+        onCreate: { _ in },
+        repos: sampleRepos,
+        selectedRepo: sampleRepos[0],
+        selectedFolder: URL(fileURLWithPath: "/private/var/mobile/Containers/Shared/AppGroup/Obsidian/MyVault"),
+        folderBookmark: Data(),
+        isLoadingRepos: false,
+        selectedBranch: "main",
+        branches: sampleBranches
+    )
+    .preferredColorScheme(.dark)
+}
+
+#Preview("5. Non-empty Folder Alert") {
+    AddVaultView(
+        token: "fake",
+        onCreate: { _ in },
+        repos: sampleRepos,
+        selectedRepo: sampleRepos[0],
+        selectedFolder: URL(fileURLWithPath: "/private/var/mobile/Containers/Shared/AppGroup/Obsidian/MyVault"),
+        folderBookmark: Data(),
+        isLoadingRepos: false,
+        showNonEmptyConfirm: true,
+        selectedBranch: "main",
+        branches: sampleBranches
+    )
 }
