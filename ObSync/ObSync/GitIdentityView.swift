@@ -31,6 +31,7 @@ struct GitIdentityFormView: View {
     @State var name: String
     @State var email: String
     @State private var showInfo = false
+    @State var errorMessage: String?
 
     var body: some View {
         NavigationStack {
@@ -59,6 +60,12 @@ struct GitIdentityFormView: View {
                                 .foregroundStyle(.obsidianPurple)
                         }
                     }
+                } footer: {
+                    if let errorMessage {
+                        Text(errorMessage)
+                            .font(.firaCode(.caption))
+                            .foregroundStyle(.red)
+                    }
                 }
                 Section {
                     HStack(spacing: 16) {
@@ -76,9 +83,19 @@ struct GitIdentityFormView: View {
                         }
 
                         Button {
-                            GitIdentity(name: name.trimmingCharacters(in: .whitespaces),
-                                        email: email.trimmingCharacters(in: .whitespaces)).save()
-                            onSave()
+                            let trimmedName = name.trimmingCharacters(in: .whitespaces)
+                            let trimmedEmail = email.trimmingCharacters(in: .whitespaces)
+                            if trimmedName.isEmpty && trimmedEmail.isEmpty {
+                                errorMessage = "Name and email are required."
+                            } else if trimmedName.isEmpty {
+                                errorMessage = "Name is required."
+                            } else if trimmedEmail.isEmpty {
+                                errorMessage = "Email is required."
+                            } else {
+                                errorMessage = nil
+                                GitIdentity(name: trimmedName, email: trimmedEmail).save()
+                                onSave()
+                            }
                         } label: {
                             Text("Save")
                                 .font(.firaCode(.headline))
@@ -86,12 +103,12 @@ struct GitIdentityFormView: View {
                                 .padding(.vertical, 10)
                         }
                         .glassButton()
-                        .disabled(name.isEmpty || email.isEmpty)
                     }
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle("Git Identity")
             .navigationBarTitleDisplayMode(.inline)
             .alert("Git Identity", isPresented: $showInfo) {
@@ -134,4 +151,14 @@ struct GitIdentityEditorView: View {
 
 #Preview("Editor") {
     GitIdentityEditorView()
+}
+
+#Preview("Validation Error") {
+    GitIdentityFormView(
+        dismissable: true,
+        onSave: {},
+        name: "",
+        email: "",
+        errorMessage: "Name and email are required."
+    )
 }

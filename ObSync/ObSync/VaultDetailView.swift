@@ -12,6 +12,8 @@ struct VaultDetailView: View {
     @State private var showConflictInfo = false
     @State private var branches: [GitHubAuth.Branch] = []
     @State private var showBranchPicker = false
+    @State private var showIdentityPrompt = false
+    @State private var pendingWriteEnable = false
 
     private var vault: Vault? {
         store.vaults.first { $0.id == vaultID }
@@ -87,8 +89,20 @@ struct VaultDetailView: View {
 
             Section {
                 Toggle("Push local changes", isOn: Binding(
-                    get: { vault.syncMode == .readWrite },
-                    set: { store.updateSyncMode(for: vault.id, mode: $0 ? .readWrite : .readOnly) }
+                    get: { vault.syncMode == .readWrite || pendingWriteEnable },
+                    set: { newValue in
+                        if newValue {
+                            if GitIdentity.current == nil {
+                                pendingWriteEnable = true
+                                showIdentityPrompt = true
+                            } else {
+                                store.updateSyncMode(for: vault.id, mode: .readWrite)
+                            }
+                        } else {
+                            pendingWriteEnable = false
+                            store.updateSyncMode(for: vault.id, mode: .readOnly)
+                        }
+                    }
                 ))
                 .tint(.obsidianPurple)
             } header: {
@@ -275,6 +289,14 @@ struct VaultDetailView: View {
                 }
             }
             .presentationDetents([.medium])
+        }
+        .sheet(isPresented: $showIdentityPrompt, onDismiss: {
+            if GitIdentity.current != nil {
+                store.updateSyncMode(for: vault.id, mode: .readWrite)
+            }
+            pendingWriteEnable = false
+        }) {
+            GitIdentityEditorView()
         }
         .sheet(isPresented: $showFolderPicker) {
             FolderPicker { url in

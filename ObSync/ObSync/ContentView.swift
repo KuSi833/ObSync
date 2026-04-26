@@ -4,22 +4,15 @@ internal import UniformTypeIdentifiers
 struct ContentView: View {
     @State private var oauthToken: String?
     @State private var vaultStore = VaultStore()
-    @State private var hasIdentity = GitIdentity.current != nil
 
     var body: some View {
         if let token = oauthToken {
-            if hasIdentity {
-                VaultsListView(store: vaultStore, token: token) {
-                    oauthToken = nil
-                }
-                .task {
-                    vaultStore.preloadAllCommits()
-                    vaultStore.onTokenExpired = { oauthToken = nil }
-                }
-            } else {
-                GitIdentityView {
-                    hasIdentity = true
-                }
+            VaultsListView(store: vaultStore, token: token) {
+                oauthToken = nil
+            }
+            .task {
+                vaultStore.preloadAllCommits()
+                vaultStore.onTokenExpired = { oauthToken = nil }
             }
         } else {
             LoginView { token in
@@ -43,7 +36,6 @@ struct ContentView: View {
             ]
             _vaultStore = State(initialValue: store)
             _oauthToken = State(initialValue: "debug-token")
-            _hasIdentity = State(initialValue: true)
         } else {
             if let saved = GitHubAuth.loadToken() {
                 _oauthToken = State(initialValue: saved)
